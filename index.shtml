@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <meta http-equiv="Content-Language" content="en-us" />
     <link rel="stylesheet" type="text/css" href="cover.css" />
-    <title>Full perl coverage report</title>
+    <title>Full perl 5.9.x coverage report</title>
   </head>
   <body>
     <h1>Perl 5.9.x full coverage report</h1>
