@@ -1,0 +1,114 @@
+#!/bin/sh
+mkdir -p /mnt/video/Perl/bleadcover
+cd /mnt/video/Perl/bleadcover
+rsync -avz --delete rsync://ftp.linux.activestate.com/perl-current/ current
+
+gcov_flags="-fprofile-arcs -ftest-coverage"
+CCFLAGS=" -DPERL_GCC_PEDANTIC $gcov_flags -W -Wall -Wextra "
+LDFLAGS=" $gcov_flags "
+
+cat >index.html <<HTML
+<html>
+<head>
+<title>Blead Perl Coverage</title>
+<link rel="stylesheet" type="text/css" href="cover1/cover_db/cover.css"/>
+</head>
+<body>
+<h1>Blead Perl Coverage</h1>
+<ul>
+HTML
+
+num=1
+for opt in '' '-Dusethreads' '-Duse64bitint' '-Dmad' '-Accflags=-DDEBUGGING' \
+                                             '-Dmad   -Accflags=-DDEBUGGING' \
+                             '-Duse64bitint   -Dmad' \
+              '-Dusethreads                   -Dmad' \
+              '-Dusethreads   -Duse64bitint' \
+              '-Dusethreads   -Duse64bitint   -Dmad' \
+              '-Dusethreads                           -Accflags=-DDEBUGGING' \
+              '-Dusethreads                   -Dmad   -Accflags=-DDEBUGGING' \
+                             '-Duse64bitint           -Accflags=-DDEBUGGING' \
+                             '-Duse64bitint   -Dmad   -Accflags=-DDEBUGGING' \
+              '-Dusethreads   -Duse64bitint           -Accflags=-DDEBUGGING' \
+              '-Dusethreads   -Duse64bitint   -Dmad   -Accflags=-DDEBUGGING'
+    do
+
+#for opt in '' '-Dusethreads' '-Duse64bitint' '-Accflags=-DDEBUGGING' \
+#              '-Dusethreads   -Duse64bitint' \
+#              '-Dusethreads                           -Accflags=-DDEBUGGING' \
+#                             '-Duse64bitint           -Accflags=-DDEBUGGING' \
+#              '-Dusethreads   -Duse64bitint           -Accflags=-DDEBUGGING' 
+#    do
+
+    # clean up and create directory for this cover
+    dir="cover$num"
+    rm -Rf $dir
+    mkdir -p $dir/cover_db
+    log=cover_db/log.txt
+    echo " >>> $dir"
+
+    # update the index
+    echo "  <li><a href=\"cover$num/cover_db/coverage.html\">coverage $num</a> [<a href=\"cover$num/cover_db/report.txt\">text version</a>] - options: '<code>$opt</code>'</li>" >>index.html
+
+    # copy Perl sources in there
+    rsync -a current/ $dir
+    cd $dir
+
+    echo " *** configuring ***"
+    echo "Configure options: $opt" >cover_db/config.txt
+    ./Configure \
+        -des -Dusedevel $opt \
+        -Accflags="$CCFLAGS" -Aldflags="$LDFLAGS" \
+        -Dprefix=/usr/local/perl/blead \
+        -Dmydomain=.maddingue.net -Dcf_email=mad@maddingue.org -Dperladmin=mad@maddingue.org \
+        >>$log 2>&1
+
+    echo " *** making perl.gcov ***"
+    make perl.gcov      >cover_db/make_gcov.txt 2>&1
+    echo " *** running test ***"
+    make test           >cover_db/make_test.txt 2>&1
+
+    ./perl -Ilib -V >cover_db/config.txt
+
+    # generate coverage data
+    find . -type f -name "*.c" -exec exec-in-dir {} gcov {} \;      >>$log 2>&1
+
+    # convert these to Devel::Cover format and generate the report
+    find . -type f -name "*.gcov" -exec gcov2perl {} \;             >>$log 2>&1
+    cover -report html                                              >>$log 2>&1
+    cover -report text >cover_db/report.txt                                2>&1
+
+    # ugly hack to add links
+    perl -pi -e 'BEGIN{$patch=shift} /Database:/ and s|(align="left">)[^<]+(</td>)|$1blead\@$patch$2| and s|</tr>|<td><a href="make_gcov.txt">output of <code>make perl.gcov</code></a>, <a href="make_test.txt">output of <code>make test</code></a>, <a href="config.txt"><code>perl -V</code></a>, <a href="gcov.list">gcov.list</a>, <a href="gcov.tar">gcov.tar</a></td></tr>|' $(cat .patch) cover_db/coverage.html
+
+    # generate the tarball that contains the coverage data
+    find . -name '*.gcov' >cover_db/gcov.list
+    tar cf cover_db/gcov.tar -T cover_db/gcov.list
+
+    cd ..
+    num=$(( num + 1 ))
+done
+
+cat >>index.html <<HTML
+</ul>
+</body>
+</html>
+HTML
+
+other_warnings="
+    -Wbad-function-cast \
+    -Wconversion \
+    -Wdisabled-optimization \
+    -Wformat \
+    -Wmissing-declarations \
+    -Wmissing-format-attribute \
+    -Wmissing-noreturn \
+    -Wmissing-prototypes \
+    -Wno-cast-qual \
+    -Wno-sign-compare \
+    -Wpointer-arith \
+    -Wstrict-prototypes \
+    -Wunused \
+    -Wwrite-strings \
+"
+
