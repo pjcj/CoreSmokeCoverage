@@ -1,5 +1,7 @@
 #! /bin/sh
 
+# $Id$
+
 # Set vars for all the steps
 GCB_RSYNC=1
 GCB_BUILD=1
