@@ -127,6 +127,7 @@ if [ "$GCB_ARCHIVE" == "1" ] ; then
          -exec cp -v {} perlcover/ \;
 
     "$builddir/perl" "-I$builddir/lib" -V > perlcover/dashV.txt
+    perl -MHTML::Entities -i.orig -pe 'encode_entities($_)' $logf
     cp -v $logf perlcover/
     cp -v index.shtml perlcover/
 
