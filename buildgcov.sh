@@ -67,6 +67,7 @@ logf="$basedir/gcov/buildgcov.log"
 echo "gcov run for `cat $builddir/.patch`" > "$logf"
 if [ "$GCB_BUILD" == "1" ] ; then
     opt=""
+    echo "#name=configure ./Configure $opt" >> "$logf"
     sh ./Configure -des -Dusedevel $opt               \
                    -A prepend:ccflags="$gcovflags"    \
                    -A prepend:ldflags="$gcovflags"    \
@@ -74,6 +75,7 @@ if [ "$GCB_BUILD" == "1" ] ; then
                    -Dextras='Devel::Cover'          >> "$logf" 2>&1
 
 # build the special binary and copy it to the default
+    echo "#name=makeperlgcov make perl.gcov" >> "$logf"
     make perl.gcov >> "$logf" 2>&1
     cp -v perl.gcov perl
 fi
@@ -81,6 +83,7 @@ fi
 # Copy a pre-cooked CPAN config to help 'Dextras='
 # make will build all modules and invoke CPAN to build Devel::Cover
 if [ "$GCB_MAKE" == "1" ] ; then
+    echo "#name=make make" >> "$logf"
     cp -v "$basedir/gcov/CPAN-Config.pm" lib/CPAN/Config.pm
     make >> "$logf" 2>&1
 fi
@@ -92,6 +95,7 @@ inccover="-I$incbase/lib -I$incbase/arch"
 
 if [ "$GCB_TEST" == "1" ] ; then
     echo "test_harness with '$inccover $usecover'"
+    echo "#name=maketestharness make test_harness" >> "$logf"
     HARNESS_PERL_SWITCHES="$inccover $usecover" \
         make test_harness >> "$logf" 2>&1
 fi
@@ -127,7 +131,8 @@ if [ "$GCB_ARCHIVE" == "1" ] ; then
          -exec cp -v {} perlcover/ \;
 
     "$builddir/perl" "-I$builddir/lib" -V > perlcover/dashV.txt
-    perl -MHTML::Entities -i.orig -pe 'encode_entities($_)' $logf
+    perl -MHTML::Entities -i.0 -pe 'encode_entities($_)' $logf
+    perl -i.1 -pe 's!^#name=(\S+) (.+)!<a name="$1"></a><h3>$2</h3>!' $logf
     cp -v $logf perlcover/
     cp -v index.shtml perlcover/
 
