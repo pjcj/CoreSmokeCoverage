@@ -16,7 +16,14 @@
       <li><a href="coverage.html" title="Coverage report"
             >Coverage report</a></li>
       <li><a href="#dashV" title="-V info">perl -V</a></li>
-      <li><a href="#buildlog" title="Full buildlog">Build logfile</a></li>
+      <li><a href="#buildlog" title="Full buildlog">Build logfile</a>
+        <ul>
+          <li><a href="#configure">./Configure</a></li>
+          <li><a href="#makeperlgcov">make perl.gcov</a></li>
+          <li><a href="#make">make</a></li>
+          <li><a href="#maketestharness">make test_harness</a></li>
+        </ul>
+      </li>
     </ul>
     <hr />
     <a name="dashV"></a><h2>perl -V</h2>
