@@ -14,7 +14,9 @@
     <h1>Perl 5.9.x full coverage report</h1>
     <ul>
       <li><a href="coverage.html" title="Coverage report"
-            >Coverage report</a></li>
+            >Coverage report</a>
+        <table><!--#include virtual="covtotal.inc" --></table>
+      </li>
       <li><a href="#dashV" title="-V info">perl -V</a></li>
       <li><a href="#buildlog" title="Full buildlog">Build logfile</a>
         <ul>
