@@ -137,7 +137,7 @@ if [ "$GCB_ARCHIVE" == "1" ] ; then
     cp -v index.shtml perlcover/
 
     cd perlcover/
-    perl -ne '/>(?:Total|file)\b/ and print' > covtotal.inc
+    perl -ne '/>(?:Total|file)\b/ and print' coverage.html > covtotal.inc
     cd ..
 
     my_arch=perlcover`cat "$builddir/.patch"`.tbz
