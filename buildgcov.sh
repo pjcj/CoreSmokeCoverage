@@ -10,6 +10,7 @@ GCB_TEST=1
 GCB_GATHER=1
 GCB_COVER=1
 GCB_ARCHIVE=1
+GCB_PUSH=1
 DBG_SYM=""
 for argv
     do case $argv in
@@ -19,9 +20,11 @@ for argv
         -notest)    GCB_TEST=0    ;;
         -nogather)  GCB_GATHER=0  ;;
         -nocover)   GCB_COVER=0   ;;
-        -noarchive) GCB_ARCHIVE=0 ;;
+        -noarchive) GCB_ARCHIVE=0 ;GCB_PUSH=0 ;;
+        -nopush)    GCB_PUSH=0    ;;
         -debug)     DBG_SYM="GCB_RSYNC GCB_BUILD GCB_MAKE GCB_TEST"
-                    DBG_SYM="$DBG_SYM GCB_GATHER GCB_COVER GCB_ARCHIVE" ;;
+                    DBG_SYM="$DBG_SYM GCB_GATHER GCB_COVER GCB_ARCHIVE"
+                    DBG_SYM="$DBG_SYM GCB_PUSH" ;;
         -*)         if [ "$argv" == "--help" -o "$argv" == "-h" ] ; then
                         echo ""
                     else
@@ -35,6 +38,8 @@ Usage: $0 [options]
   -notest     Don't call 'make test'
   -nogather   Don't gather all the gcov information
   -nocover    Don't run Devel::Cover's cover
+  -noarchive  Don't create the tarball (implies -nopush)
+  -nopush     Don't push the tarball to ztreet
 EOF
     esac
 done
@@ -140,9 +145,20 @@ if [ "$GCB_ARCHIVE" == "1" ] ; then
     perl -ne '/>(?:Total|file)\b/ and print' coverage.html > covtotal.inc
     cd ..
 
-    my_arch=perlcover`cat "$builddir/.patch"`.tbz
+    my_ver=perlcover`cat "$builddir/.patch"`
+    my_arch="$my_ver.tbz"
+    mv perlcover $my_ver
     echo "Create '$my_arch'"
-    tar -cjvf "$my_arch" perlcover/
+    tar -cjvf "$my_arch" "$my_ver/"
 
-    if [ -d 'perlcover' ] ; then rm -rf perlcover ; fi
+    if [ -d "$my_ver" ] ; then rm -rf "$my_ver" ; fi
+
+    if [ "$GCB_PUSH" == "1" ] ; then
+        phost=ztreet.xs4all.nl
+        pdir=/home/apache/test-smoke/htdocs/pachive
+        scp "$my_arch" "$phost:$pdir"
+        my_script="cd $pdir/.. ;tar -xjf parchive/$my_arch"
+        my_script="$my_script ;rm -f perlcover ;ln -s $my_ver perlcover"
+        ssh "$phost" "'$my_script'"
+    fi
 fi
