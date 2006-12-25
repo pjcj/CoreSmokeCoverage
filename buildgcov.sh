@@ -14,23 +14,25 @@ GCB_PUSH=1
 DBG_SYM=""
 for argv
     do case $argv in
-        -nosync)    GCB_RSYNC=0   ;;
-        -nobuild)   GCB_BUILD=0   ;;
-        -nomake)    GCB_MAKE=0    ;;
-        -notest)    GCB_TEST=0    ;;
-        -nogather)  GCB_GATHER=0  ;;
-        -nocover)   GCB_COVER=0   ;;
-        -noarchive) GCB_ARCHIVE=0 ;GCB_PUSH=0 ;;
-        -nopush)    GCB_PUSH=0    ;;
-        -debug)     DBG_SYM="GCB_RSYNC GCB_BUILD GCB_MAKE GCB_TEST"
-                    DBG_SYM="$DBG_SYM GCB_GATHER GCB_COVER GCB_ARCHIVE"
-                    DBG_SYM="$DBG_SYM GCB_PUSH" ;;
-        -*)         if [ "$argv" == "--help" -o "$argv" == "-h" ] ; then
-                        echo ""
-                    else
-                        echo "Unknown argument '$argv'"
-                    fi
-                    cat <<EOF && exit ;;
+        -nosync)      GCB_RSYNC=0   ;;
+        -nobuild)     GCB_BUILD=0   ;;
+        -nomake)      GCB_MAKE=0    ;;
+        -notest)      GCB_TEST=0    ;;
+        -nogather)    GCB_GATHER=0  ;;
+        -nocover)     GCB_COVER=0   ;;
+        -noarchive)   GCB_ARCHIVE=0 ;GCB_PUSH=0 ;;
+        -nopush)      GCB_PUSH=0    ;;
+        -archiveonly) GCB_RSYNC=0; GCB_BUILD=0; GCB_MAKE=0; GCB_TEST=0;
+                      GCB_COVER=0; GCB_GATHER=0 ;;
+        -debug)       DBG_SYM="GCB_RSYNC GCB_BUILD GCB_MAKE GCB_TEST"
+                      DBG_SYM="$DBG_SYM GCB_GATHER GCB_COVER GCB_ARCHIVE"
+                      DBG_SYM="$DBG_SYM GCB_PUSH" ;;
+        -*)           if [ "$argv" == "--help" -o "$argv" == "-h" ] ; then
+                          echo ""
+                      else
+                          echo "Unknown argument '$argv'"
+                      fi
+                      cat <<EOF && exit ;;
 Usage: $0 [options]
   -nosync     Don't sync the source-tree
   -nobuild    Don't call 'make perl.gcov'
@@ -149,16 +151,17 @@ if [ "$GCB_ARCHIVE" == "1" ] ; then
     my_arch="$my_ver.tbz"
     mv perlcover $my_ver
     echo "Create '$my_arch'"
-    tar -cjvf "$my_arch" "$my_ver/"
+    tar -cjf "$my_arch" "$my_ver/"
 
     if [ -d "$my_ver" ] ; then rm -rf "$my_ver" ; fi
 
     if [ "$GCB_PUSH" == "1" ] ; then
         phost=ztreet.xs4all.nl
-        pdir=/home/apache/test-smoke/htdocs/pachive
+        pdir=/home/apache/test-smoke/htdocs/pcarchive/
         scp "$my_arch" "$phost:$pdir"
-        my_script="cd $pdir/.. ;tar -xjf parchive/$my_arch"
-        my_script="$my_script ;rm -f perlcover ;ln -s $my_ver perlcover"
-        ssh "$phost" "'$my_script'"
+        my_script="cd $pdir.. ;tar -xjf pcarchive/$my_arch"
+        my_script="$my_script ;rm -rf perlcover ;ln -s $my_ver perlcover"
+        echo "ssh $phost '$my_script'"
+        ssh "$phost" "$my_script"
     fi
 fi
