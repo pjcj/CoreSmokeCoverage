@@ -1,0 +1,44 @@
+README for buildgcov
+====================
+
+This set of files is used to build a gcov(1) enabled version of perl-current.
+
+The main script is "buildgcov.sh" and does all the work in a number of steps:
+
+    1) rsync the source-tree
+    2) Configure perl for gcov (with -Dextras=Devel::Cover)
+    3) build perl.gcov
+    4) run the test-suit with -MDevel::Cover
+    5) gather all *.gcov files and convert with gcov2perl
+    6) run Devel::Cover's cover to craete the report
+    7) create a stand-alone archive of the coverage and build reports
+
+    8) push the archive to my web-server
+
+FILES NEEDED
+============
+
+    buildgcov.sh
+    exec-in-dir
+    CPAN-Config.pm
+    index.shtml
+
+
+WHERE TO GET IT
+===============
+
+At the moment this is only available via rsync:
+
+    rsync://source.test-smoke.org/buildgcov
+
+
+VERSION and STUFF
+=================
+
+(c) MMVI Abe Timmerman <abeltje@cpan.org>
+
+$Id$
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
