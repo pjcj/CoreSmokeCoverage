@@ -4,6 +4,7 @@
 
 # Set vars for all the steps
 GCB_RSYNC=1
+GCB_DBG=0
 GCB_BUILD=1
 GCB_MAKE=1
 GCB_TEST=1
@@ -14,6 +15,7 @@ GCB_PUSH=1
 DBG_SYM=""
 for argv
     do case $argv in
+        -dbg)         GCB_DBG=1     ;;
         -nosync)      GCB_RSYNC=0   ;;
         -nobuild)     GCB_BUILD=0   ;;
         -nomake)      GCB_MAKE=0    ;;
@@ -73,7 +75,11 @@ fi
 logf="$basedir/gcov/buildgcov.log"
 echo "gcov run for `cat $builddir/.patch`" > "$logf"
 if [ "$GCB_BUILD" == "1" ] ; then
-    opt=""
+    if [ "$GCB_DBG" == "1" ] ; then
+        opt="-DDEBUGGING=both"
+    else
+        opt=""
+    fi
     echo "#name=configure ./Configure $opt" >> "$logf"
     sh ./Configure -des -Dusedevel $opt               \
                    -A prepend:ccflags="$gcovflags"    \
@@ -148,6 +154,7 @@ if [ "$GCB_ARCHIVE" == "1" ] ; then
     cd ..
 
     my_ver=perlcover`cat "$builddir/.patch"`
+    if [ "$GCB_DBG" == "1" ] ; then my_ver="${my_ver}DBG" ; fi
     my_arch="$my_ver.tbz"
     mv perlcover $my_ver
     echo "Create '$my_arch'"
