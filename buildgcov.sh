@@ -29,7 +29,7 @@ for argv
         -debug)       DBG_SYM="GCB_RSYNC GCB_BUILD GCB_MAKE GCB_TEST"
                       DBG_SYM="$DBG_SYM GCB_GATHER GCB_COVER GCB_ARCHIVE"
                       DBG_SYM="$DBG_SYM GCB_PUSH" ;;
-        -*)           if [ "$argv" == "--help" -o "$argv" == "-h" ] ; then
+        -*)           if [ "$argv" = "--help" -o "$argv" = "-h" ] ; then
                           echo ""
                       else
                           echo "Unknown argument '$argv'"
@@ -67,15 +67,15 @@ gcovflags="-fprofile-arcs -ftest-coverage"
 
 cd $builddir
 
-if [ "$GCB_RSYNC" == "1" ] ; then
+if [ "$GCB_RSYNC" = "1" ] ; then
   echo "rsync with bleadperl"
   rsync -azq --delete public.activestate.com::perl-current .
 fi
 
 logf="$basedir/gcov/buildgcov.log"
 echo "gcov run for `cat $builddir/.patch`" > "$logf"
-if [ "$GCB_BUILD" == "1" ] ; then
-    if [ "$GCB_DBG" == "1" ] ; then
+if [ "$GCB_BUILD" = "1" ] ; then
+    if [ "$GCB_DBG" = "1" ] ; then
         opt="-DDEBUGGING=both"
     else
         opt=""
@@ -95,7 +95,7 @@ fi
 
 # Copy a pre-cooked CPAN config to help 'Dextras='
 # make will build all modules and invoke CPAN to build Devel::Cover
-if [ "$GCB_MAKE" == "1" ] ; then
+if [ "$GCB_MAKE" = "1" ] ; then
     echo "#name=make make" >> "$logf"
     cp -v "$basedir/gcov/CPAN-Config.pm" lib/CPAN/Config.pm
     make >> "$logf" 2>&1
@@ -106,7 +106,7 @@ incbase="$builddir/ext/$coverdir/blib"
 usecover=-MDevel::Cover=-ignore,\\.t$,-inc,/does/not/exist
 inccover="-I$incbase/lib -I$incbase/arch"
 
-if [ "$GCB_TEST" == "1" ] ; then
+if [ "$GCB_TEST" = "1" ] ; then
     echo "test_harness with '$inccover $usecover'"
     echo "#name=maketestharness make test_harness" >> "$logf"
     HARNESS_PERL_SWITCHES="$inccover $usecover" \
@@ -114,7 +114,7 @@ if [ "$GCB_TEST" == "1" ] ; then
 fi
 
 # here we gather the coverage data
-if [ "$GCB_GATHER" == "1" ] ; then
+if [ "$GCB_GATHER" = "1" ] ; then
     cd "$builddir"
     echo "Start gathering from `pwd`"
     execindir="$basedir/gcov/exec-in-dir"
@@ -127,13 +127,13 @@ if [ "$GCB_GATHER" == "1" ] ; then
                           -db "$builddir/t/cover_db" {} \;
 fi
 
-if [ "$GCB_COVER" == "1" ] ; then
+if [ "$GCB_COVER" = "1" ] ; then
     cd t
     PERL5LIB="$incbase/lib:$incbase/arch" \
         ../perl -I../lib $inccover "$incbase/script/cover"
 fi
 
-if [ "$GCB_ARCHIVE" == "1" ] ; then
+if [ "$GCB_ARCHIVE" = "1" ] ; then
     cd "$basedir/gcov"
     if [ -d 'perlcover' ] ; then rm -rf perlcover ; fi
     mkdir perlcover
@@ -154,7 +154,7 @@ if [ "$GCB_ARCHIVE" == "1" ] ; then
     cd ..
 
     my_ver=perlcover`cat "$builddir/.patch"`
-    if [ "$GCB_DBG" == "1" ] ; then my_ver="${my_ver}DBG" ; fi
+    if [ "$GCB_DBG" = "1" ] ; then my_ver="${my_ver}DBG" ; fi
     my_arch="$my_ver.tbz"
     mv perlcover $my_ver
     echo "Create '$my_arch'"
@@ -162,7 +162,7 @@ if [ "$GCB_ARCHIVE" == "1" ] ; then
 
     if [ -d "$my_ver" ] ; then rm -rf "$my_ver" ; fi
 
-    if [ "$GCB_PUSH" == "1" ] ; then
+    if [ "$GCB_PUSH" = "1" ] ; then
         phost=ztreet.xs4all.nl
         pdir=/home/apache/test-smoke/htdocs/pcarchive/
         scp "$my_arch" "$phost:$pdir"
