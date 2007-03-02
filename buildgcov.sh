@@ -3,8 +3,8 @@
 # $Id$
 
 # Set vars for all the steps
-GCB_RSYNC=1
 GCB_DBG=0
+GCB_RSYNC=1
 GCB_BUILD=1
 GCB_MAKE=1
 GCB_TEST=1
@@ -29,13 +29,15 @@ for argv
         -debug)       DBG_SYM="GCB_RSYNC GCB_BUILD GCB_MAKE GCB_TEST"
                       DBG_SYM="$DBG_SYM GCB_GATHER GCB_COVER GCB_ARCHIVE"
                       DBG_SYM="$DBG_SYM GCB_PUSH" ;;
-        -*)           if [ "$argv" = "--help" -o "$argv" = "-h" ] ; then
+        -*)           if [ "$argv" == "--help" -o "$argv" == "-h" ] ; then
                           echo ""
                       else
                           echo "Unknown argument '$argv'"
                       fi
                       cat <<EOF && exit ;;
 Usage: $0 [options]
+  -dbg        Add the -DDEBUGGING=both switch to Configure
+
   -nosync     Don't sync the source-tree
   -nobuild    Don't call 'make perl.gcov'
   -nomake     Don't call 'make'
@@ -58,6 +60,9 @@ done
 
 basedir="$HOME/Test-Smoke"
 builddir="$basedir/perl-current-gcov"
+if [ "$GCB_DBG" = "1" ] ; then builddir="${builddir}-DBG" ; fi
+echo "Running gcov frm '$builddir'"
+
 if [ ! -d $builddir ] ; then
     echo "Create '$builddir'"
     mkdir -p "$builddir"
@@ -98,6 +103,10 @@ fi
 if [ "$GCB_MAKE" = "1" ] ; then
     echo "#name=make make" >> "$logf"
     cp -v "$basedir/gcov/CPAN-Config.pm" lib/CPAN/Config.pm
+    if [ "$GCB_DBG" = "1" ] ; then
+        perl -i.bak -pe '/build_dir/ && s!(/perl-current-gcov)/!$1-DBG/!' \
+                        lib/CPAN/Config.pm
+    fi
     make >> "$logf" 2>&1
 fi
 
