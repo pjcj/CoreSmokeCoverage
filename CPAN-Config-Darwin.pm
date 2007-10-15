@@ -5,11 +5,13 @@
 # ~/.cpan/CPAN/MyConfig.pm.
 
 $CPAN::Config = {
+  'auto_commit' => q[0],
   'build_cache' => q[100],
-  'build_dir' => q[/home/abeltje/Test-Smoke/perl-current-gcov/ext],
+  'build_dir' => q[/Users/abeltje/Test-Smoke/perl-current-gcov/ext],
   'bzip2' => q[/usr/bin/bzip2],
   'cache_metadata' => q[1],
-  'cpan_home' => q[/home/abeltje/Test-Smoke/.cpan],
+  'commandnumber_in_prompt' => q[1],
+  'cpan_home' => q[/Users/abeltje/Test-Smoke/.cpan],
   'curl' => q[],
   'ftp' => q[/usr/bin/ftp],
   'ftp_passive' => q[1],
@@ -17,13 +19,13 @@ $CPAN::Config = {
   'getcwd' => q[cwd],
   'gpg' => q[/usr/bin/gpg],
   'gzip' => q[/bin/gzip],
-  'histfile' => q[/home/abeltje/Test-Smoke/.cpan/histfile],
+  'histfile' => q[/Users/abeltje/Test-Smoke/.cpan/histfile],
   'histsize' => q[100],
   'http_proxy' => q[],
   'inactivity_timeout' => q[0],
   'index_expire' => q[1],
   'inhibit_startup_message' => q[0],
-  'keep_source_where' => q[/home/abeltje/Test-Smoke/.cpan/sources],
+  'keep_source_where' => q[/Users/abeltje/Test-Smoke/.cpan/sources],
   'lynx' => q[],
   'make' => q[/usr/bin/make],
   'make_arg' => q[],
@@ -45,8 +47,10 @@ $CPAN::Config = {
   'show_upload_date' => q[1],
   'tar' => q[/bin/tar],
   'term_is_latin' => q[1],
+  'term_ornaments' => q[1],
   'unzip' => q[/usr/bin/unzip],
   'urllist' => [q[ftp://ftp.cpan.nl/pub/CPAN/], q[ftp://cpan.wanadoo.nl/pub/CPAN], q[ftp://download.ip2.net/pub/mirror/CPAN/], q[ftp://download.xs4all.nl/pub/mirror/CPAN/]],
+  'use_sqlite' => q[0],
   'wget' => q[/usr/bin/wget],
 };
 1;

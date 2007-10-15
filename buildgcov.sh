@@ -68,7 +68,7 @@ if [ ! -d $builddir ] ; then
     mkdir -p "$builddir"
 fi
 # set the flags needed for a gcov build
-gcovflags="-fprofile-arcs -ftest-coverage"
+gcovflags="-fprofile-arcs -ftest-coverage "
 
 cd $builddir
 
@@ -85,11 +85,13 @@ if [ "$GCB_BUILD" = "1" ] ; then
     else
         opt=""
     fi
+#    my_lddlflags="$gvovflags -shared"
+    my_lddlflags="$gvovflags"
     echo "#name=configure ./Configure $opt" >> "$logf"
-    sh ./Configure -des -Dusedevel $opt               \
-                   -A prepend:ccflags="$gcovflags"    \
-                   -A prepend:ldflags="$gcovflags"    \
-                   -A prepend:lddlflags="$gcovflags -shared" \
+    sh ./Configure -des -Dusedevel $opt                 \
+                   -A prepend:ccflags="$gcovflags"      \
+                   -A prepend:ldflags="$gcovflags"      \
+                   -A prepend:lddlflags="$my_lddlflags" \
                    -Dextras='Devel::Cover'          >> "$logf" 2>&1
 
 # build the special binary and copy it to the default
@@ -102,7 +104,8 @@ fi
 # make will build all modules and invoke CPAN to build Devel::Cover
 if [ "$GCB_MAKE" = "1" ] ; then
     echo "#name=make make" >> "$logf"
-    cp -v "$basedir/gcov/CPAN-Config.pm" lib/CPAN/Config.pm
+    cpanos=`uname -s`
+    cp -v "$basedir/gcov/CPAN-Config-$cpanos.pm" lib/CPAN/Config.pm
     if [ "$GCB_DBG" = "1" ] ; then
         perl -i.bak -pe '/build_dir/ && s!(/perl-current-gcov)/!$1-DBG/!' \
                         lib/CPAN/Config.pm
