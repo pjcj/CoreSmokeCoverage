@@ -8,7 +8,7 @@ The main script is "buildgcov.sh" and does all the work in a number of steps:
     1) rsync the source-tree
     2) Configure perl for gcov (with -Dextras=Devel::Cover)
     3) build perl.gcov
-    4) run the test-suit with -MDevel::Cover
+    4) run the test-suite with -MDevel::Cover
     5) gather all *.gcov files and convert with gcov2perl
     6) run Devel::Cover's cover to craete the report
     7) create a stand-alone archive of the coverage and build reports
@@ -20,16 +20,18 @@ FILES NEEDED
 
     buildgcov.sh
     exec-in-dir
-    CPAN-Config.pm
+    CPAN-Config-Linux.pm or CPAN-Config-Dawin.pm *
     index.shtml
 
+* You will need to edit these and set the paths to your home directory.
 
 WHERE TO GET IT
 ===============
 
-At the moment this is only available via rsync:
+At the moment this is available via rsync and subversion:
 
     rsync://source.test-smoke.org/buildgcov
+    http://source.test-smoke.org/svn/buildgcov
 
 
 VERSION and STUFF
