@@ -68,16 +68,17 @@ if [ ! -d $builddir ] ; then
     mkdir -p "$builddir"
 fi
 # set the flags needed for a gcov build
-gcovflags="-fprofile-arcs -ftest-coverage "
+gcovldflags="-fprofile-arcs "
+gcovccflags="-fprofile-arcs -ftest-coverage "
 
 cd $builddir
 
 if [ "$GCB_RSYNC" = "1" ] ; then
   echo "rsync with bleadperl"
-  rsync -azq --delete public.activestate.com::perl-current .
+  rsync -azq --delete perl5.git.perl.org::perl-current .
 fi
 
-logf="$basedir/gcov/buildgcov.log"
+logf="$basedir/gcov/log_buildgcov.log"
 echo "gcov run for `cat $builddir/.patch`" > "$logf"
 if [ "$GCB_BUILD" = "1" ] ; then
     if [ "$GCB_DBG" = "1" ] ; then
@@ -85,14 +86,19 @@ if [ "$GCB_BUILD" = "1" ] ; then
     else
         opt=""
     fi
-#    my_lddlflags="$gvovflags -shared"
-    my_lddlflags="$gvovflags"
+
+    my_lddlflags="$gvovflags -shared"
+#    my_lddlflags="$gvovldflags"
     echo "#name=configure ./Configure $opt" >> "$logf"
     sh ./Configure -des -Dusedevel $opt                 \
-                   -A prepend:ccflags="$gcovflags"      \
-                   -A prepend:ldflags="$gcovflags"      \
+                   -A prepend:ccflags="$gcovccflags"    \
+                   -A prepend:ldflags="$gcovldflags"    \
                    -A prepend:lddlflags="$my_lddlflags" \
-                   -Dextras='Devel::Cover'          >> "$logf" 2>&1
+                   -Dsiteprefix="$builddir"             \
+                   -Dsitelib="$builddir/lib"            \
+                   -Dvendorprefix="$builddir"           \
+                   -Dvendorlib="$builddir/lib"          \
+                   -Dextras='Test::Warn Devel::Cover'  >> "$logf" 2>&1
 
 # build the special binary and copy it to the default
     echo "#name=makeperlgcov make perl.gcov" >> "$logf"
