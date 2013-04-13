@@ -1,6 +1,8 @@
 #! /bin/sh
 
-# $Id$
+basedir="$HOME/Test-Smoke"
+mydir="$basedir/CoreSmokeCoverage"
+builddir="$basedir/perl-current-gcov"
 
 # Set vars for all the steps
 GCB_DBG=0
@@ -58,8 +60,6 @@ for sym in $DBG_SYM ; do
     echo "\$$sym=$val"
 done
 
-basedir="$HOME/Test-Smoke"
-builddir="$basedir/perl-current-gcov"
 if [ "$GCB_DBG" = "1" ] ; then builddir="${builddir}-DBG" ; fi
 echo "Running gcov from '$builddir'"
 
@@ -83,7 +83,7 @@ fi
 
 export PERL_SRC=$builddir
 
-logf="$basedir/gcov/log_buildgcov.log"
+logf="$mydir/log_buildgcov.log"
 echo "gcov run for `cat $builddir/.patch`" > "$logf"
 if [ "$GCB_BUILD" = "1" ] ; then
     if [ "$GCB_DBG" = "1" ] ; then
@@ -102,8 +102,8 @@ if [ "$GCB_BUILD" = "1" ] ; then
                    -Dsitelib="$builddir/lib"            \
                    -Dvendorprefix="$builddir"           \
                    -Dvendorlib="$builddir/lib"          \
-                   -Dextras='Test::Warn Devel::Cover'   \
-                   >> "$logf" 2>&1
+                   -Dprefix="$builddir"                 \
+                   -Dextras='Devel::Cover'              >> "$logf" 2>&1
 
 # build the special binary and copy it to the default
     echo "#name=makeperlgcov make perl.gcov" >> "$logf"
@@ -111,17 +111,23 @@ if [ "$GCB_BUILD" = "1" ] ; then
     cp -v perl.gcov perl
 fi
 
+# To help Devel::Cover install, we skip the tests completely
+echo "Fixing Makefile -Dextras (do not run tests)"
+perl -i.withextrastest -pe "s/'\@ARGV&&make\(\@ARGV\)'/'\@ARGV&&notest(install => \@ARGV)'/" Makefile
+perl -i.withextrastest -pe "s/'\@ARGV&&test\(\@ARGV\)'/'1'/" Makefile
+perl -i.withextrastest -pe "s/'\@ARGV&&install\(\@ARGV\)'/'1'/" Makefile
+
 # Copy a pre-cooked CPAN config to help 'Dextras='
 # make will build all modules and invoke CPAN to build Devel::Cover
 if [ "$GCB_MAKE" = "1" ] ; then
     echo "#name=make make" >> "$logf"
     cpanos=`uname -s`
-    cp -v "$basedir/gcov/CPAN-Config-$cpanos.pm" lib/CPAN/Config.pm
+    cp -v "$mydir/CPAN-Config-$cpanos.pm" lib/CPAN/Config.pm
     if [ "$GCB_DBG" = "1" ] ; then
         perl -i.bak -pe '/build_dir/ && s!(/perl-current-gcov)/!$1-DBG/!' \
                         lib/CPAN/Config.pm
     fi
-    make >> "$logf" 2>&1
+    DEVEL_COVER_NO_COVERAGE=1 make >> "$logf" 2>&1
 fi
 
 coverdir=`ls "$builddir/ext" | grep Devel-Cover`
@@ -140,7 +146,7 @@ fi
 if [ "$GCB_GATHER" = "1" ] ; then
     cd "$builddir"
     echo "Start gathering from `pwd`"
-    execindir="$basedir/gcov/exec-in-dir"
+    execindir="$mydir/exec-in-dir"
 
     find "$builddir" -type f -name "*.c"    -exec "$execindir" {} gcov {} \;
 
@@ -157,7 +163,7 @@ if [ "$GCB_COVER" = "1" ] ; then
 fi
 
 if [ "$GCB_ARCHIVE" = "1" ] ; then
-    cd "$basedir/gcov"
+    cd "$mydir"
     if [ -d 'perlcover' ] ; then rm -rf perlcover ; fi
     mkdir perlcover
     find "$builddir/t/cover_db/" -type f  -name "*.html" \
