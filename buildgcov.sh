@@ -61,22 +61,27 @@ done
 basedir="$HOME/Test-Smoke"
 builddir="$basedir/perl-current-gcov"
 if [ "$GCB_DBG" = "1" ] ; then builddir="${builddir}-DBG" ; fi
-echo "Running gcov frm '$builddir'"
+echo "Running gcov from '$builddir'"
 
 if [ ! -d $builddir ] ; then
     echo "Create '$builddir'"
     mkdir -p "$builddir"
 fi
 # set the flags needed for a gcov build
-gcovldflags="-fprofile-arcs "
-gcovccflags="-fprofile-arcs -ftest-coverage "
+gcovldflags="-fprofile-arcs"
+gcovccflags="-fprofile-arcs -ftest-coverage"
 
 cd $builddir
 
 if [ "$GCB_RSYNC" = "1" ] ; then
   echo "rsync with bleadperl"
   rsync -azq --delete perl5.git.perl.org::perl-current .
+
+  echo "patching MakeMaker"
+  perl -pi -e 's/(my \$header_dir = )(\$self->\{PERL_SRC\})/$1\$ENV{PERL_SRC} || $2/' cpan/ExtUtils-MakeMaker/lib/ExtUtils/MM_Any.pm
 fi
+
+export PERL_SRC=$builddir
 
 logf="$basedir/gcov/log_buildgcov.log"
 echo "gcov run for `cat $builddir/.patch`" > "$logf"
@@ -87,8 +92,7 @@ if [ "$GCB_BUILD" = "1" ] ; then
         opt=""
     fi
 
-    my_lddlflags="$gvovflags -shared"
-#    my_lddlflags="$gvovldflags"
+    my_lddlflags="$gcovldflags -shared"
     echo "#name=configure ./Configure $opt" >> "$logf"
     sh ./Configure -des -Dusedevel $opt                 \
                    -A prepend:ccflags="$gcovccflags"    \
@@ -98,7 +102,8 @@ if [ "$GCB_BUILD" = "1" ] ; then
                    -Dsitelib="$builddir/lib"            \
                    -Dvendorprefix="$builddir"           \
                    -Dvendorlib="$builddir/lib"          \
-                   -Dextras='Test::Warn Devel::Cover'  >> "$logf" 2>&1
+                   -Dextras='Test::Warn Devel::Cover'   \
+                   >> "$logf" 2>&1
 
 # build the special binary and copy it to the default
     echo "#name=makeperlgcov make perl.gcov" >> "$logf"

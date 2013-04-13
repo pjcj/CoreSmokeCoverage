@@ -39,7 +39,7 @@ $CPAN::Config = {
   'make_arg' => q[],
   'make_install_arg' => q[UNINST=1],
   'make_install_make_command' => q[/usr/bin/make],
-  'makepl_arg' => qINSTALLDIRS=vendor[],
+  'makepl_arg' => q[INSTALLDIRS=vendor],
   'mbuild_arg' => q[],
   'mbuild_install_arg' => q[--uninst 1],
   'mbuild_install_build_command' => q[./Build],
