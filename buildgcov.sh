@@ -79,6 +79,7 @@ if [ "$GCB_RSYNC" = "1" ] ; then
 
   echo "patching MakeMaker"
   perl -pi -e 's/(my \$header_dir = )(\$self->\{PERL_SRC\})/$1\$ENV{PERL_SRC} || $2/' cpan/ExtUtils-MakeMaker/lib/ExtUtils/MM_Any.pm
+  perl -pi -e 's/^\s+Failed a basic test.*//' t/TEST
 fi
 
 export PERL_SRC=$builddir
@@ -103,7 +104,7 @@ if [ "$GCB_BUILD" = "1" ] ; then
                    -Dvendorprefix="$builddir"           \
                    -Dvendorlib="$builddir/lib"          \
                    -Dprefix="$builddir"                 \
-                   -Dextras='Devel::Cover'              >> "$logf" 2>&1
+                   -Dextras='Template Devel::Cover'     >> "$logf" 2>&1
 
 # build the special binary and copy it to the default
     echo "#name=makeperlgcov make perl.gcov" >> "$logf"
@@ -130,16 +131,11 @@ if [ "$GCB_MAKE" = "1" ] ; then
     DEVEL_COVER_NO_COVERAGE=1 make >> "$logf" 2>&1
 fi
 
-coverdir=`ls "$builddir/ext" | grep Devel-Cover`
-incbase="$builddir/ext/$coverdir/blib"
-usecover=-MDevel::Cover=-ignore,\\.t$,-inc,/does/not/exist
-inccover="-I$incbase/lib -I$incbase/arch"
-
 if [ "$GCB_TEST" = "1" ] ; then
-    echo "test_harness with '$inccover $usecover'"
-    echo "#name=maketestharness make test_harness" >> "$logf"
-    HARNESS_PERL_SWITCHES="$inccover $usecover" \
-        make test_harness >> "$logf" 2>&1
+    echo "running tests"
+    echo "#name=maketest" >> "$logf"
+    find t -name '*.t' \
+           -exec echo {} \; -exec ./perl -Ilib -MDevel::Cover {} \;
 fi
 
 # here we gather the coverage data
@@ -148,28 +144,25 @@ if [ "$GCB_GATHER" = "1" ] ; then
     echo "Start gathering from `pwd`"
     execindir="$mydir/exec-in-dir"
 
-    find "$builddir" -type f -name "*.c"    -exec "$execindir" {} gcov {} \;
+    find "$builddir" -type f -name "*.c" -exec "$execindir" {} gcov {} \;
 
-    PERL5LIB="$incbase/lib:$incbase/arch" \
-        find "$builddir" -type f -name "*.gcov" \
-             -exec ./perl -Ilib "$incbase/script/gcov2perl" \
-                          -db "$builddir/t/cover_db" {} \;
+    find "$builddir" -type f -name "*.gcov" \
+         -exec ./perl -Ilib "$builddir/bin/gcov2perl" \
+                      -db "$builddir/cover_db" {} \;
 fi
 
 if [ "$GCB_COVER" = "1" ] ; then
-    cd t
-    PERL5LIB="$incbase/lib:$incbase/arch" \
-        ../perl -I../lib $inccover "$incbase/script/cover"
+    ./perl -I../lib bin/cover -report html_basic
 fi
 
 if [ "$GCB_ARCHIVE" = "1" ] ; then
     cd "$mydir"
     if [ -d 'perlcover' ] ; then rm -rf perlcover ; fi
     mkdir perlcover
-    find "$builddir/t/cover_db/" -type f  -name "*.html" \
+    find "$builddir/cover_db/" -type f  -name "*.html" \
          -exec cp -v {} perlcover/ \;
 
-    find "$builddir/t/cover_db/" -type f  -name "*.css" \
+    find "$builddir/cover_db/" -type f  -name "*.css" \
          -exec cp -v {} perlcover/ \;
 
     "$builddir/perl" "-I$builddir/lib" -V > perlcover/dashV.txt
