@@ -1,0 +1,8 @@
+*.org
+*.bak
+*~
+*.patch
+*.orig
+*.rej
+tmp/
+log_buildgcov.log
