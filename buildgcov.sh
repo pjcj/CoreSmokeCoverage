@@ -52,6 +52,8 @@ EOF
     esac
 done
 
+export TEST_JOBS=8
+export DEVEL_COVER_NO_TESTS=1
 
 # Debug info
 for sym in $DBG_SYM ; do
@@ -107,16 +109,9 @@ if [ "$GCB_BUILD" = "1" ] ; then
                    -Dextras='Template Devel::Cover'     >> "$logf" 2>&1
 
 # build the special binary and copy it to the default
-    echo "#name=makeperlgcov make perl.gcov" >> "$logf"
-    make perl.gcov >> "$logf" 2>&1
-    cp -v perl.gcov perl
+    echo "#name=makeperl make perl" >> "$logf"
+    make perl -j $TEST_JOBS >> "$logf" 2>&1
 fi
-
-# To help Devel::Cover install, we skip the tests completely
-echo "Fixing Makefile -Dextras (do not run tests)"
-perl -i.withextrastest -pe "s/'\@ARGV&&make\(\@ARGV\)'/'\@ARGV&&notest(install => \@ARGV)'/" Makefile
-perl -i.withextrastest -pe "s/'\@ARGV&&test\(\@ARGV\)'/'1'/" Makefile
-perl -i.withextrastest -pe "s/'\@ARGV&&install\(\@ARGV\)'/'1'/" Makefile
 
 # Copy a pre-cooked CPAN config to help 'Dextras='
 # make will build all modules and invoke CPAN to build Devel::Cover
@@ -128,7 +123,8 @@ if [ "$GCB_MAKE" = "1" ] ; then
         perl -i.bak -pe '/build_dir/ && s!(/perl-current-gcov)/!$1-DBG/!' \
                         lib/CPAN/Config.pm
     fi
-    DEVEL_COVER_NO_COVERAGE=1 make >> "$logf" 2>&1
+    make -j $TEST_JOBS >> "$logf" 2>&1
+    make extras.install >> "$logf" 2>&1
 fi
 
 if [ "$GCB_TEST" = "1" ] ; then

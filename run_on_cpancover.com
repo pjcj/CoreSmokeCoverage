@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./buildgcov.sh -noarchive
+sh -v ./buildgcov.sh -noarchive
 db=~/Test-Smoke/perl-current-gcov/cover_db
 echo $db
 find $db -type f -exec gzip -9 {} \;
